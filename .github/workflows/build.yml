@@ -1,0 +1,36 @@
+name: Build Windows Solution
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '4.8' # Adjust to your .NET version
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration Release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-output
+          path: |
+            **/bin/Release/*
+
