@@ -1,4 +1,4 @@
-name: Build Windows Solution
+name: Build Multiple Programs
 
 on:
   push:
@@ -21,16 +21,30 @@ jobs:
         with:
           dotnet-version: '4.8' # Adjust to your .NET version
 
-      - name: Restore dependencies
-        run: dotnet restore
+      # Build RpcClient
+      - name: Restore dependencies for RpcClient
+        run: dotnet restore RpcClient/RpcClient.sln
 
-      - name: Build solution
-        run: dotnet build --configuration Release
+      - name: Build solution for RpcClient
+        run: dotnet build RpcClient/RpcClient.sln --configuration Release
 
-      - name: Upload artifact
+      - name: Upload artifact for RpcClient
         uses: actions/upload-artifact@v2
         with:
-          name: build-output
+          name: RpcClient-output
           path: |
-            **/bin/Release/*
+            RpcClient/**/bin/Release/*
 
+      # Build SprintCSP
+      - name: Restore dependencies for SprintCSP
+        run: dotnet restore SprintCSP/SprintCSP.sln
+
+      - name: Build solution for SprintCSP
+        run: dotnet build SprintCSP/SprintCSP.sln --configuration Release
+
+      - name: Upload artifact for SprintCSP
+        uses: actions/upload-artifact@v2
+        with:
+          name: SprintCSP-output
+          path: |
+            SprintCSP/**/bin/Release/*
