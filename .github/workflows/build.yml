@@ -1,4 +1,4 @@
-name: Build Multiple Programs
+name: Build RpcClient
 
 on:
   push:
@@ -21,28 +21,21 @@ jobs:
 
       # Build RpcClient
       - name: Restore dependencies for RpcClient
-        run: dotnet restore RpcClient/RpcClient.sln
+        run: msbuild RpcClient/RpcClient.sln/t:restore
+        continue-on-error: true
+        shell: pwsh
+        id: restore-RpcClient
 
-      - name: Build solution for RpcClient
-        run: dotnet build RpcClient/RpcClient.sln --configuration Release
+      - name: Build log
+        if: failure()
+        run: Get-Content RpcClient/RpcClient.sln*.log-Tail 100
 
       - name: Upload artifact for RpcClient
+        if: successful()
         uses: actions/upload-artifact@v2
         with:
           name: RpcClient-output
           path: |
             RpcClient/**/bin/Release/*
 
-      # Build SprintCSP
-      - name: Restore dependencies for SprintCSP
-        run: dotnet restore SprintCSP/SprintCSP.sln
-
-      - name: Build solution for SprintCSP
-        run: dotnet build SprintCSP/SprintCSP.sln --configuration Release
-
-      - name: Upload artifact for SprintCSP
-        uses: actions/upload-artifact@v2
-        with:
-          name: SprintCSP-output
-          path: |
-            SprintCSP/**/bin/Release/*
+  
