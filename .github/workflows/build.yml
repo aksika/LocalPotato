@@ -10,32 +10,31 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: windows-2019  # Use a Windows runner with Visual Studio 2019
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # Set up MSBuild for Visual Studio 2019
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v1
 
-      # Build RpcClient
-      - name: Restore dependencies for RpcClient
-        run: msbuild RpcClient/RpcClient.sln/t:restore
-        continue-on-error: true
+      # Restore dependencies
+      - name: Restore dependencies
+        run: msbuild RpcClient/RpcClient.sln /t:Restore
         shell: pwsh
-        id: restore-RpcClient
 
-      - name: Build log
-        if: failure()
-        run: Get-Content RpcClient/RpcClient.sln*.log-Tail 100
+      # Build the solution
+      - name: Build solution
+        run: msbuild RpcClient/RpcClient.sln /p:Configuration=Release
+        shell: pwsh
 
-      - name: Upload artifact for RpcClient
-        if: success()
+      # Upload build artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v2
         with:
           name: RpcClient-output
           path: |
-            RpcClient/**/bin/Release/*
-
-  
+            RpcClient/**/Release/*
+            
