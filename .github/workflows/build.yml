@@ -74,7 +74,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for file in RpcClient/**/Release/*; do
-            echo "Uploading $file..."
-            gh release upload ${{ steps.create_release.outputs.upload_url }} $file --clobber --repo $GITHUB_REPOSITORY
-          done
+          $files = Get-ChildItem -Path */**/Release/*
+          foreach ($file in $files) {
+            Write-Host "Uploading $file..."
+            gh release upload ${{ steps.create_release.outputs.upload_url }} $file.FullName --clobber --repo $GITHUB_REPOSITORY
+          }
+        shell: pwsh
+        
