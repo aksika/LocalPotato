@@ -74,9 +74,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $files = Get-ChildItem -Path */**/Release/*.zip
-          foreach ($file in $files) {
-            Write-Host "Uploading $file..."
-            gh release upload ${{ steps.create_release.outputs.upload_url }} $file.FullName --clobber --repo $GITHUB_REPOSITORY
-          }
+          $uploadUrl = '${{ steps.create_release.outputs.upload_url }}'
+          gh release upload $uploadUrl 'RpcClient/**/Release/RpcClient.zip' --clobber --repo $GITHUB_REPOSITORY
+          gh release upload $uploadUrl 'SprintCSP/**/Release/SprintCSP.zip' --clobber --repo $GITHUB_REPOSITORY
         shell: pwsh
