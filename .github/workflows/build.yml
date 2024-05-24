@@ -74,10 +74,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $files = Get-ChildItem -Path */**/Release/*
+          Remove-Item -Path *.zip
+          Remove-Item -Path *.tar.gz
+          $files = Get-ChildItem -Path */**/Release/*.zip
           foreach ($file in $files) {
             Write-Host "Uploading $file..."
             gh release upload ${{ steps.create_release.outputs.upload_url }} $file.FullName --clobber --repo $GITHUB_REPOSITORY
           }
         shell: pwsh
-        
