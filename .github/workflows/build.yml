@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v1
@@ -25,9 +25,9 @@ jobs:
         run: msbuild RpcClient/RpcClient.sln /p:Configuration=Release
         shell: pwsh
       
-      # Upload RpcClient artifacts
+      # Upload RpcClient artifacts - fixed to use @v4
       - name: Upload RpcClient artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: RpcClient
           path: RpcClient/bin/Release/*
@@ -41,9 +41,9 @@ jobs:
         run: msbuild SprintCSP/SprintCSP.sln /p:Configuration=Release
         shell: pwsh
       
-      # Upload SprintCSP artifacts
+      # Upload SprintCSP artifacts - fixed to use @v4
       - name: Upload SprintCSP artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: SprintCSP
           path: SprintCSP/bin/Release/*
@@ -59,37 +59,16 @@ jobs:
           echo "tag=$newTag" >> $env:GITHUB_OUTPUT
         shell: pwsh
       
-      - name: Create Release
+      # Create and upload release
+      - name: Create Release and Upload Assets
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          name: Release ${{ steps.tag.outputs.tag }}
-          draft: false
-          prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}
-          generate_release_notes: true
-      
-      # Zip RpcClient output
-      - name: Zip RpcClient
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: Compress-Archive -Path RpcClient/bin/Release/* -DestinationPath RpcClient.zip
+        run: |
+          # Zip artifacts
+          Compress-Archive -Path RpcClient/bin/Release/* -DestinationPath RpcClient.zip -Force
+          Compress-Archive -Path SprintCSP/bin/Release/* -DestinationPath SprintCSP.zip -Force
+          
+          # Create release and upload assets
+          gh release create "${{ steps.tag.outputs.tag }}" RpcClient.zip SprintCSP.zip --title "Release ${{ steps.tag.outputs.tag }}" --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
-      
-      # Zip SprintCSP output
-      - name: Zip SprintCSP
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: Compress-Archive -Path SprintCSP/bin/Release/* -DestinationPath SprintCSP.zip
-        shell: pwsh
-      
-      # Upload zipped files to the release
-      - name: Upload Release Assets
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          files: |
-            RpcClient.zip
-            SprintCSP.zip
-          token: ${{ secrets.GITHUB_TOKEN }}
