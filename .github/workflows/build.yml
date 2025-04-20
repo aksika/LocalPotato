@@ -7,33 +7,24 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag name for the release'
-        required: true
-      release_name:
-        description: 'Name of the release'
-        required: true
 
 jobs:
   build:
-    runs-on: windows-2022  # Use a Windows runner with Visual Studio 2022
+    runs-on: windows-2022  # Windows with Visual Studio 2022 for .NET Framework
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Set up MSBuild for Visual Studio 2022
+      # Set up MSBuild
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v1
 
-      # Restore dependencies for RpcClient
+      # Build RpcClient
       - name: Restore dependencies RpcClient
         run: msbuild RpcClient/RpcClient.sln /t:Restore
         shell: pwsh
 
-      # Build RpcClient
       - name: Build RpcClient
         run: msbuild RpcClient/RpcClient.sln /p:Configuration=Release
         shell: pwsh
@@ -43,14 +34,13 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: RpcClient
-          path: RpcClient/**/bin/Release/*
+          path: RpcClient/bin/Release/*
 
-      # Restore dependencies for SprintCSP
+      # Build SprintCSP
       - name: Restore dependencies SprintCSP
         run: msbuild SprintCSP/SprintCSP.sln /t:Restore
         shell: pwsh
 
-      # Build SprintCSP
       - name: Build SprintCSP
         run: msbuild SprintCSP/SprintCSP.sln /p:Configuration=Release
         shell: pwsh
@@ -60,39 +50,40 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: SprintCSP
-          path: SprintCSP/**/bin/Release/*
+          path: SprintCSP/bin/Release/*
 
-      # Create a GitHub release (only on workflow_dispatch)
+      # Create a release (only on push to main)
       - name: Create Release
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.tag }}
-          release_name: ${{ github.event.inputs.release_name }}
+          tag_name: release-${{ github.sha }}
+          release_name: Release ${{ github.sha }}
           draft: false
           prerelease: false
 
-      # Zip RpcClient build output (only on workflow_dispatch)
+      # Zip RpcClient output
       - name: Zip RpcClient
-        if: github.event_name == 'workflow_dispatch'
-        run: Compress-Archive -Path RpcClient/**/bin/Release/* -DestinationPath RpcClient.zip
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: Compress-Archive -Path RpcClient/bin/Release/* -DestinationPath RpcClient.zip
         shell: pwsh
 
-      # Zip SprintCSP build output (only on workflow_dispatch)
+      # Zip SprintCSP output
       - name: Zip SprintCSP
-        if: github.event_name == 'workflow_dispatch'
-        run: Compress-Archive -Path SprintCSP/**/bin/Release/* -DestinationPath SprintCSP.zip
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: Compress-Archive -Path SprintCSP/bin/Release/* -DestinationPath SprintCSP.zip
         shell: pwsh
 
-      # Upload release assets (only on workflow_dispatch)
+      # Upload zipped files to the release
       - name: Upload Release Assets
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ steps.create_release.outputs.upload_url }} RpcClient.zip --clobber
           gh release upload ${{ steps.create_release.outputs.upload_url }} SprintCSP.zip --clobber
         shell: pwsh
+        
