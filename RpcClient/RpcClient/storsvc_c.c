@@ -1,9 +1,9 @@
 #if defined(_M_AMD64)
 
-#define WIN10
+//#define WIN10
 //#define WIN11
 //#define WIN2019
-//#define WIN2022
+#define WIN2022
 
 #if _MSC_VER >= 1200
 #pragma warning(push)
