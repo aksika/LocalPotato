@@ -10,7 +10,7 @@ Make your changes, github will compile it for you
 
 Let's start by dealing with RpcClient.exe. As previously mentioned, we will need to change the exploit depending on the Windows version of the target machine. To do this, we will need to change the first lines of `RpcClient\RpcClient\storsvc_c.c` so that the correct operating system is chosen.
 
-If teh target machine is running Windows Server 2019, we will edit the file to look as follows:
+If the target machine is running Windows Server 2019, we will edit the file accordingly:
 
     #if defined(_M_AMD64)
 
@@ -64,7 +64,6 @@ If the exploitation was successful beluga will be in the Administrators group:
         C:\Users\user\Desktop> net user beluga
         
 ## Localpotato
-
 By using Localpotato exploit we can access C:\windows\system32 even if we are using an unprivileged user:
 
         C:\Users\user\Desktop> LocalPotato.exe -i SprintCSP.dll -o \Windows\System32\SprintCSP.dll
