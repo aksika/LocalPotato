@@ -25,13 +25,6 @@ jobs:
         run: msbuild RpcClient/RpcClient.sln /p:Configuration=Release
         shell: pwsh
       
-      # Upload RpcClient artifacts - fixed to use @v4
-      - name: Upload RpcClient artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: RpcClient
-          path: RpcClient/bin/Release/*
-      
       # Build SprintCSP
       - name: Restore dependencies SprintCSP
         run: msbuild SprintCSP/SprintCSP.sln /t:Restore
@@ -41,34 +34,30 @@ jobs:
         run: msbuild SprintCSP/SprintCSP.sln /p:Configuration=Release
         shell: pwsh
       
-      # Upload SprintCSP artifacts - fixed to use @v4
-      - name: Upload SprintCSP artifacts
+      # Upload artifacts directly from correct paths
+      - name: Upload RpcClient
+        uses: actions/upload-artifact@v4
+        with:
+          name: RpcClient
+          path: RpcClient/x64/Release/RpcClient.exe
+          
+      - name: Upload SprintCSP
         uses: actions/upload-artifact@v4
         with:
           name: SprintCSP
-          path: SprintCSP/bin/Release/*
+          path: SprintCSP/x64/Release/SprintCSP.dll
       
-      # Create a release with auto-tagging (only on push to main)
-      - name: Generate release tag
+      # Create release with correct file paths
+      - name: Create Release and Upload Files
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        id: tag
         run: |
+          # Generate tag (vYYYY.MM.DD.N)
           $date = Get-Date -Format "yyyy.MM.dd"
           $count = (git tag -l "v$date.*" | Measure-Object).Count
           $newTag = "v$date.$count"
-          echo "tag=$newTag" >> $env:GITHUB_OUTPUT
-        shell: pwsh
-      
-      # Create and upload release
-      - name: Create Release and Upload Assets
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          # Zip artifacts
-          Compress-Archive -Path RpcClient/bin/Release/* -DestinationPath RpcClient.zip -Force
-          Compress-Archive -Path SprintCSP/bin/Release/* -DestinationPath SprintCSP.zip -Force
           
-          # Create release and upload assets
-          gh release create "${{ steps.tag.outputs.tag }}" RpcClient.zip SprintCSP.zip --title "Release ${{ steps.tag.outputs.tag }}" --generate-notes
+          # Create release with the compiled files
+          gh release create $newTag "./RpcClient/x64/Release/RpcClient.exe" "./SprintCSP/x64/Release/SprintCSP.dll" --title "Release $newTag" --generate-notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
