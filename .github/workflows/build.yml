@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # This fetches all history for proper tag counting
       
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v1
@@ -47,17 +49,37 @@ jobs:
           name: SprintCSP
           path: SprintCSP/x64/Release/SprintCSP.dll
       
-      # Create release with correct file paths
+      # Create release with correct file paths and proper tag incrementation
       - name: Create Release and Upload Files
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          # Generate tag (vYYYY.MM.DD.N)
+          # Generate tag with incremental build number
           $date = Get-Date -Format "yyyy.MM.dd"
-          $count = (git tag -l "v$date.*" | Measure-Object).Count
-          $newTag = "v$date.$count"
+          $existingTags = git tag -l "v$date.*"
+          $buildNumber = 0
           
-          # Create release with the compiled files
-          gh release create $newTag "./RpcClient/x64/Release/RpcClient.exe" "./SprintCSP/x64/Release/SprintCSP.dll" --title "Release $newTag" --generate-notes
+          if ($existingTags) {
+            # Extract max build number and increment
+            $buildNumbers = $existingTags | ForEach-Object { 
+              if ($_ -match "v$date\.(\d+)$") { 
+                [int]$Matches[1] 
+              } 
+            }
+            $maxBuildNumber = ($buildNumbers | Measure-Object -Maximum).Maximum
+            $buildNumber = $maxBuildNumber + 1
+          }
+          
+          $newTag = "v$date.$buildNumber"
+          echo "Creating release with tag: $newTag"
+          
+          # Create zip files
+          New-Item -ItemType Directory -Force -Path ./release
+          Copy-Item ./RpcClient/x64/Release/RpcClient.exe ./release/
+          Copy-Item ./SprintCSP/x64/Release/SprintCSP.dll ./release/
+          Compress-Archive -Path ./release/* -DestinationPath ./release-files.zip -Force
+          
+          # Create release with zipped files
+          gh release create $newTag "./release-files.zip" --title "Release $newTag" --generate-notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
